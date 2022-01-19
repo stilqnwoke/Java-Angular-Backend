@@ -1,17 +1,29 @@
 package com.stk.rest.webservices.restfulwebservices.jwt.resource;
 
-import com.stk.rest.webservices.restfulwebservices.jwt.*;
+import java.util.Objects;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.stk.rest.webservices.restfulwebservices.jwt.JwtTokenUtil;
+import com.stk.rest.webservices.restfulwebservices.jwt.JwtUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Objects;
+
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -35,7 +47,8 @@ public class JwtAuthenticationRestController {
 
         authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
 
-        final UserDetails userDetails = jwtInMemoryUserDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+        final UserDetails userDetails = jwtInMemoryUserDetailsService
+                .loadUserByUsername(authenticationRequest.getUsername());
 
         final String token = jwtTokenUtil.generateToken(userDetails);
 
@@ -57,7 +70,7 @@ public class JwtAuthenticationRestController {
         }
     }
 
-    @ExceptionHandler({AuthenticationException.class})
+    @ExceptionHandler({ AuthenticationException.class })
     public ResponseEntity<String> handleAuthenticationException(AuthenticationException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }

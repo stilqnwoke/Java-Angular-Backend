@@ -1,5 +1,7 @@
 package com.stk.rest.webservices.restfulwebservices.jwt;
 
+import com.stk.rest.webservices.restfulwebservices.jwt.JwtTokenAuthorizationOncePerRequestFilter;
+import com.stk.rest.webservices.restfulwebservices.jwt.JwtUnAuthorizedResponseAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -36,15 +39,13 @@ public class JWTWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(jwtInMemoryUserDetailsService)
-                .passwordEncoder(new BCryptPasswordEncoder());
+        auth.userDetailsService(jwtInMemoryUserDetailsService).passwordEncoder(passwordEncoderBean());
     }
 
-    //@Bean
-    //public PasswordEncoder passwordEncoderBean() {
-    //    return new BCryptPasswordEncoder();
-    //}
+    @Autowired
+    public PasswordEncoder passwordEncoderBean() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     @Override
@@ -54,39 +55,24 @@ public class JWTWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(jwtUnAuthorizedResponseAuthenticationEntryPoint).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests()
-                .anyRequest().authenticated();
+        httpSecurity.csrf().disable().exceptionHandling()
+                .authenticationEntryPoint(jwtUnAuthorizedResponseAuthenticationEntryPoint).and().sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests().anyRequest()
+                .authenticated();
 
-        httpSecurity
-                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        httpSecurity
-                .headers()
-                .frameOptions().sameOrigin()  //H2 Console Needs this setting
-                .cacheControl(); //disable caching
+        httpSecurity.headers().frameOptions().sameOrigin() // H2 Console Needs this setting
+                .cacheControl(); // disable caching
     }
 
     @Override
     public void configure(WebSecurity webSecurity) throws Exception {
-        webSecurity
-                .ignoring()
-                .antMatchers(
-                        HttpMethod.POST,
-                        authenticationPath
-                )
+        webSecurity.ignoring().antMatchers(HttpMethod.POST, authenticationPath)
                 .antMatchers(HttpMethod.OPTIONS, "/**")
-                .and()
-                .ignoring()
-                .antMatchers(
-                        HttpMethod.GET,
-                        "/" //Other Stuff You want to Ignore
-                )
-                .and()
-                .ignoring()
-                .antMatchers("/h2-console/**/**");//Should not be in Production!
+                .and().ignoring()
+                .antMatchers(HttpMethod.GET, "/" // Other Stuff You want to Ignore
+                ).and().ignoring()
+                .antMatchers("/h2-console/**/**");// Should not be done in Production!
     }
 }

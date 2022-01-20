@@ -1,10 +1,17 @@
 package com.stk.rest.webservices.restfulwebservices.todo;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.util.Date;
 import java.util.Objects;
 
+@Entity
 public class Todo {
+    @Id
+    @GeneratedValue
     private long id;
+
     private String username;
     private String description;
     private Date targetDate;
